@@ -1,0 +1,64 @@
+name: Upload APK to Server with Login
+
+on:
+  # 保留原有推送触发（可选）
+  push:
+    branches: [main]
+  # 添加手动触发
+  workflow_dispatch:  # 允许通过 GitHub 界面手动启动
+
+jobs:
+  upload-apk:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 检查 APK 文件是否存在
+      - name: Check APK existence
+        run: |
+          if [ ! -f "apk/app-newest.apk" ]; then
+            echo "APK 文件不存在！"
+            exit 1
+          fi
+
+      # 3. 登录系统并获取 Token
+      - name: Login to System
+        id: login
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+          EMAIL: ${{ secrets.EMAIL }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: |
+          TIMESTAMP=$(date +%s%3N)
+          LOGIN_DATA=$(cat <<EOF
+          {
+            "apikey": "${API_KEY}",
+            "mkey": "usermanager",
+            "op": "Login.login",
+            "data": {
+              "email": "${EMAIL}",
+              "pwd": "${PASSWORD}"
+            },
+            "action": "user",
+            "timestamp": ${TIMESTAMP}
+          }
+          EOF
+          )
+          RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
+            -H "Content-Type: application/json" \
+            -d "$LOGIN_DATA")
+          TOKEN=$(echo $RESPONSE | jq -r '.data.token')
+          echo "::set-output name=token::$TOKEN"
+
+      # 4. 使用 Token 上传 APK
+      - name: Upload APK
+        env:
+          API_URL: http://openapi.zqpro.testin.cn
+          API_TOKEN: ${{ steps.login.outputs.token }}
+        run: |
+          curl -X POST "$API_URL" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -F "file=@apk/qq.apk" \
+            -F "branch=${{ github.ref }}"
