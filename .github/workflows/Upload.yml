@@ -23,10 +23,6 @@ jobs:
 
       # 3. 调用 Testin 登录接口并输出结果
       - name: 调用 Testin 登录接口
-        env:
-          API_KEY: ${{ secrets.TESTIN_API_KEY }}
-          EMAIL: ${{ secrets.TESTIN_EMAIL }}
-          PASSWORD: ${{ secrets.TESTIN_PASSWORD }}
         run: |
           # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
@@ -34,12 +30,12 @@ jobs:
           # 构造请求体（JSON格式）
           REQUEST_DATA=$(cat <<EOF
           {
-            "apikey": "${API_KEY}",
+            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
             "mkey": "usermanager",
             "op": "Login.login",
             "data": {
-              "email": "${EMAIL}",
-              "pwd": "${PASSWORD}"
+              "email": "nibingbing@testin.cn",
+              "pwd": "e10adc3949ba59abbe56e057f20f883e"
             },
             "action": "user",
             "timestamp": ${TIMESTAMP}
@@ -55,6 +51,3 @@ jobs:
           # 打印响应内容到日志
           echo "接口返回结果："
           echo "$RESPONSE"
-          
-          # 可选：格式化 JSON 输出（需确保 jq 已安装）
-          # echo "$RESPONSE" | jq .
