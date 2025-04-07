@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.youngwind.helloworld">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".AnotherAty"
+            android:label="另一个Activity"
+            android:windowSoftInputMode="stateVisible|adjustPan" />
+        <activity android:name=".BasicLayout" />
+        <activity android:name=".OperateView" />
+        <activity android:name=".LearnRecyclerView" />
+        <activity android:name=".ThreadAndAsyncTask" />
+        <activity android:name=".HttpRequest.HttpRequest" />
+        <activity android:name=".HttpRequest.AsyncHttp" />
+        <activity android:name=".TestWebView" />
+        <activity android:name=".JSBridgeJavaScriptInterface.JavaScriptInterface" />
+        <activity android:name=".JSBridgeCustomURL.JSBridgeCustomURL" />
+        <activity android:name=".JSBridgeAlert.JSBridgeAlert" />
+        <activity
+            android:name=".BasicUIWidget"
+            android:windowSoftInputMode="stateVisible|adjustPan" />
+        <activity android:name=".Broadcast.ListenNetWork" />
+        <activity android:name=".FileStorage.FileStorage" />
+        <activity android:name=".SendNotification" />
+        <activity android:name=".SQLite.DataBaseTest" />
+        <activity android:name=".ThreadTask.ThreadChangeUI" />
+        <activity android:name=".FileStorage.SharedPreferencesTest"></activity>
+    </application>
+
+</manifest> <!-- 项目配置文件 -->

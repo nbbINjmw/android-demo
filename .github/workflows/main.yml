@@ -1,0 +1,47 @@
+name: Upload APK to Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  upload-apk:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 登录系统获取 Token
+      - name: Login to System
+        env:
+          LOGIN_URL: "https://openapizyy.testin.cn"
+          API_KEY: ${{ secrets.API_KEY }}  # 如果需要，可从 Secrets 中获取
+        run: |
+          # 发送登录请求
+          response=$(curl -s -X POST "$LOGIN_URL" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "apikey": "e346a74769ac182dc7746a8174a10ff5",
+              "mkey": "usermanager",
+              "op": "Login.login",
+              "data": {
+                "email": "nibingbing@testin.cn",
+                "pwd": "e10adc3949ba59abbe56e057f20f883e"
+              }
+            }')
+
+          # 解析响应中的 Token（假设返回 JSON 包含 "token" 字段）
+          echo "响应内容: $response"
+          export LOGIN_TOKEN=$(echo "$response" | jq -r '.token')
+          
+          # 将 Token 设置为输出变量供后续步骤使用
+          echo "::set-output name=login_token::$LOGIN_TOKEN"
+
+      # 3. 检查 APK 文件是否存在
+      - name: Check APK existence
+        run: |
+          if [ ! -f "apk/qq.apk" ]; then
+            echo "APK 文件不存在！"
+            exit 1
+          fi
