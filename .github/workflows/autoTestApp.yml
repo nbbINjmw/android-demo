@@ -32,8 +32,8 @@ jobs:
             "mkey": "usermanager",
             "op": "Login.login",
             "data": {
-              "email": "1033081356@qq.com",
-              "pwd": "76fa3ac42ea40a439743e032c0463084"
+              "email": "nibingbing@testin.cn",
+              "pwd": "9624564eebc9a3c388f29598779f6215"
             },
             "action": "user",
             "timestamp": ${TIMESTAMP}
