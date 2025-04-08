@@ -21,8 +21,9 @@ jobs:
             exit 1
           fi
 
-      # 3. 调用 Testin 登录接口并输出结果
+      # 3. 调用 Testin 登录接口并提取 result 值
       - name: 调用 Testin 登录接口
+        id: login  # 为该步骤指定 ID，方便后续引用输出
         run: |
           # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
@@ -34,8 +35,8 @@ jobs:
             "mkey": "usermanager",
             "op": "Login.login",
             "data": {
-              "email": "nibingbing@testin.cn",
-              "pwd": "e10adc3949ba59abbe56e057f20f883e"
+              "email": "1033081356@qq.com",
+              "pwd": "76fa3ac42ea40a439743e032c0463084"
             },
             "action": "user",
             "timestamp": ${TIMESTAMP}
@@ -51,3 +52,22 @@ jobs:
           # 打印响应内容到日志
           echo "接口返回结果："
           echo "$RESPONSE"
+
+          # 使用 grep 和 awk 提取 data.result 的值
+          RESULT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | awk -F':' '{print $2}' | sed 's/"//g')
+
+          # 检查是否成功提取到 result 值
+          if [ -z "$RESULT" ]; then
+            echo "未提取到有效的 result 值！"
+            exit 1
+          fi
+
+          echo "提取到的 result 值：$RESULT"
+
+          # 将 result 值设置为输出变量
+          echo "::set-output name=result::$RESULT"
+
+      # 4. 使用提取到的 result 值
+      - name: 使用提取到的 result 值
+        run: |
+          echo "从上一步提取到的 result 值是：${{ steps.login.outputs.result }}"
