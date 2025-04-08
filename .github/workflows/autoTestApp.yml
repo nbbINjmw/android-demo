@@ -23,7 +23,7 @@ jobs:
 
       # 3. 调用 Testin 登录接口并提取 result 值
       - name: 调用 Testin 登录接口
-        id: login  # 为该步骤指定 ID，方便后续引用输出
+        id: login
         run: |
           # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
@@ -67,7 +67,36 @@ jobs:
           # 将 result 值设置为输出变量
           echo "::set-output name=result::$RESULT"
 
-      # 4. 使用提取到的 result 值
-      - name: 使用提取到的 result 值
+      # 4. 使用提取到的 result 值上传 APK 文件
+      - name: 上传 APK 文件
         run: |
-          echo "从上一步提取到的 result 值是：${{ steps.login.outputs.result }}"
+          # 动态生成时间戳（当前时间的毫秒数）
+          TIMESTAMP=$(date +%s%3N)
+
+          # 获取上一步的 sid（即 result 值）
+          SID=${{ steps.login.outputs.result }}
+
+          # 构造 UPLOAD-JSON 头
+          UPLOAD_JSON=$(cat <<EOF
+          {
+            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
+            "timestamp": ${TIMESTAMP},
+            "sid": "${SID}",
+            "mkey": "fs",
+            "action": "fs",
+            "op": "File.upload",
+            "data": {
+              "suffix": "apk"
+            }
+          }
+          EOF
+          )
+
+          # 打印 UPLOAD-JSON 头
+          echo "构造的 UPLOAD-JSON 头："
+          echo "$UPLOAD_JSON"
+
+          # 上传 APK 文件
+          curl -X POST "https://openapizyy.testin.cn" \
+            -H "UPLOAD-JSON: $UPLOAD_JSON" \
+            -F "file=@apk/app-newest.apk"
