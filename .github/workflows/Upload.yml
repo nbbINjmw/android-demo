@@ -3,7 +3,7 @@ name: 测试云测Testin
 on:
   push:
     branches: [main]
-
+  workflow_dispatch:  # 允许手动触发
 jobs:
   upload-apk:
     runs-on: ubuntu-latest
