@@ -33,11 +33,15 @@ jobs:
 
       # 2. 检查 APK 文件是否存在（仅当需要上传时）
       - name: Check APP existence
-        if: ${{ github.event.inputs.upload_app == '1' }}
         run: |
-          if [ ! -f "${{ env.APK_FILE_PATH }}" ]; then
-            echo "APK 文件不存在！"
-            exit 1
+          if [ "${{ github.event.inputs.upload_app }}" = "1" ]; then
+            echo "需要上传 APK 文件，检查文件是否存在..."
+            if [ ! -f "${{ env.APK_FILE_PATH }}" ]; then
+              echo "APK 文件不存在！"
+              exit 1
+            fi
+          else
+            echo "无需上传 APK 文件，跳过文件校验。"
           fi
 
       # 3. 调用 Testin 登录接口并提取 result 值
@@ -73,43 +77,48 @@ jobs:
       # 4. 使用提取到的 result 值上传 APK 文件（仅当需要上传时）
       - name: 上传 APP 文件
         id: upload
-        if: ${{ github.event.inputs.upload_app == '1' }}
         run: |
-          # 打印登录返回的 sid 值
-          SID=${{ steps.login.outputs.result }}
-          echo "登录返回的 sid 值：$SID"
+          if [ "${{ github.event.inputs.upload_app }}" = "1" ]; then
+            echo "开始上传 APK 文件..."
 
-          # 动态生成时间戳
-          TIMESTAMP=$(date +%s%3N)
+            # 打印登录返回的 sid 值
+            SID=${{ steps.login.outputs.result }}
+            echo "登录返回的 sid 值：$SID"
 
-          # 构造 UPLOAD-JSON 头
-          UPLOAD_JSON='{"apikey":"'${{ env.API_KEY }}'","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"f7ad7cb8ab1700de3fce03c983f201e9","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
-          echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
+            # 动态生成时间戳
+            TIMESTAMP=$(date +%s%3N)
 
-          # 使用 curl -v 打印详细请求日志
-          UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
-            -H "UPLOAD-JSON: $UPLOAD_JSON" \
-            -F "file=@${{ env.APK_FILE_PATH }}")
+            # 构造 UPLOAD-JSON 头
+            UPLOAD_JSON='{"apikey":"'${{ env.API_KEY }}'","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"f7ad7cb8ab1700de3fce03c983f201e9","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
+            echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
 
-          # 打印上传接口返回结果
-          echo "上传接口返回结果：$UPLOAD_RESPONSE"
+            # 使用 curl -v 打印详细请求日志
+            UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
+              -H "UPLOAD-JSON: $UPLOAD_JSON" \
+              -F "file=@${{ env.APK_FILE_PATH }}")
 
-          # 解析返回值（假设返回 JSON 格式）
-          STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.msg')
-          PACKAGE_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.data.result')
+            # 打印上传接口返回结果
+            echo "上传接口返回结果：$UPLOAD_RESPONSE"
 
-          # 打印解析后的返回值
-          echo "上传状态：$STATUS"
-          echo "上传结果的 packageUrl：$PACKAGE_URL"
+            # 解析返回值（假设返回 JSON 格式）
+            STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.msg')
+            PACKAGE_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.data.result')
 
-          # 错误处理
-          if [ "$STATUS" != "成功" ]; then
-            echo "上传失败！错误信息：$UPLOAD_RESPONSE"
-            exit 1
+            # 打印解析后的返回值
+            echo "上传状态：$STATUS"
+            echo "上传结果的 packageUrl：$PACKAGE_URL"
+
+            # 错误处理
+            if [ "$STATUS" != "成功" ]; then
+              echo "上传失败！错误信息：$UPLOAD_RESPONSE"
+              exit 1
+            fi
+
+            # 将 packageUrl 设置为输出变量
+            echo "::set-output name=packageUrl::$PACKAGE_URL"
+          else
+            echo "无需上传 APK 文件，跳过上传步骤。"
           fi
-
-          # 将 packageUrl 设置为输出变量
-          echo "::set-output name=packageUrl::$PACKAGE_URL"
 
       # 5. 执行定时任务
       - name: 执行定时任务
@@ -120,7 +129,7 @@ jobs:
           echo "Project ID：${{ env.PROJECT_ID }}"
 
           # 如果上传了 APK 文件，则获取上传结果的 packageUrl
-          if [ "${{ github.event.inputs.upload_app }}" == "1" ]; then
+          if [ "${{ github.event.inputs.upload_app }}" = "1" ]; then
             PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
             echo "Package URL：$PACKAGE_URL"
             APP_INFO=', "appinfo": { "packageUrl": "'"$PACKAGE_URL"'" }'
