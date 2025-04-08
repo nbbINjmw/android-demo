@@ -7,8 +7,8 @@ on:
 
 env:
   # 定义全局变量 JOB_ID 和 PROJECT_ID（固定值）
-  JOB_ID: 5       # 在这里指定 Job ID，默认值为 5
-  PROJECT_ID: 37  # 在这里指定 Project ID，默认值为 37
+  JOB_ID: 4710       # 在这里指定 Job ID，默认值为 5
+  PROJECT_ID: 1944025  # 在这里指定 Project ID，默认值为 37
 
 jobs:
   upload-apk:
@@ -118,7 +118,7 @@ jobs:
           {
             "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
             "timestamp": ${TIMESTAMP},
-            "sid": "${{ steps.login.outputs.result }}",
+            "sid": "te2cca6b2b199fd38eb6419614b9dc56",
             "mkey": "realtest",
             "action": "app",
             "op": "ScheduledJob.execute",
