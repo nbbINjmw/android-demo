@@ -1,27 +1,37 @@
-name: AutoTestApp
+name: autoTestApp
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      upload_app:
+        description: "是否需要上传 APP 文件？(true/false)"
+        required: true
+        default: "true"
 
 env:
-  # 定义全局变量 JOB_ID 和 PROJECT_ID（固定值）
-  JOB_ID: 4710       # 在这里指定 Job ID，默认值为 5
-  PROJECT_ID: 1944025  # 在这里指定 Project ID，默认值为 37
+  # 定义全局变量
+  API_KEY: "0cc70ef717d01b48ebfef5868a60cdd9"  # 在这里指定 API Key
+  APK_FILE_PATH: "apk/app-newest.apk"         # 在这里指定 APK 文件路径
+  JOB_ID: 4710                                # 在这里指定 Job ID，默认值为 4710
+  PROJECT_ID: 1944025                         # 在这里指定 Project ID，默认值为 1944025
+  EMAIL: "nibingbing@testin.cn"               # 在这里指定登录邮箱
+  PASSWORD: "9624564eebc9a3c388f29598779f6215" # 在这里指定登录密码（建议使用加密方式存储）
 
 jobs:
-  upload-apk:
+  autotest-app:
     runs-on: ubuntu-latest
     steps:
       # 1. 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 检查 APK 文件是否存在
-      - name: Check APK existence
+      # 2. 检查 APK 文件是否存在（仅当需要上传时）
+      - name: Check APP existence
+        if: github.event.inputs.upload_app == 'true'
         run: |
-          if [ ! -f "apk/app-newest.apk" ]; then
+          if [ ! -f "${{ env.APK_FILE_PATH }}" ]; then
             echo "APK 文件不存在！"
             exit 1
           fi
@@ -33,12 +43,12 @@ jobs:
           TIMESTAMP=$(date +%s%3N)
           REQUEST_DATA=$(cat <<EOF
           {
-            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
+            "apikey": "${{ env.API_KEY }}",
             "mkey": "usermanager",
             "op": "Login.login",
             "data": {
-              "email": "nibingbing@testin.cn",
-              "pwd": "9624564eebc9a3c388f29598779f6215"
+              "email": "${{ env.EMAIL }}",
+              "pwd": "${{ env.PASSWORD }}"
             },
             "action": "user",
             "timestamp": ${TIMESTAMP}
@@ -56,9 +66,10 @@ jobs:
           fi
           echo "::set-output name=result::$RESULT"
 
-      # 4. 使用提取到的 result 值上传 APK 文件
-      - name: 上传 APK 文件
+      # 4. 使用提取到的 result 值上传 APK 文件（仅当需要上传时）
+      - name: 上传 APP 文件
         id: upload
+        if: github.event.inputs.upload_app == 'true'
         run: |
           # 打印登录返回的 sid 值
           SID=${{ steps.login.outputs.result }}
@@ -68,13 +79,13 @@ jobs:
           TIMESTAMP=$(date +%s%3N)
 
           # 构造 UPLOAD-JSON 头
-          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"te2cca6b2b199fd38eb6419614b9dc56","sig":"f7ad7cb8ab1700de3fce03c983f201e9","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
+          UPLOAD_JSON='{"apikey":"'${{ env.API_KEY }}'","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"f7ad7cb8ab1700de3fce03c983f201e9","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
           echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
 
           # 使用 curl -v 打印详细请求日志
           UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "UPLOAD-JSON: $UPLOAD_JSON" \
-            -F "file=@apk/app-newest.apk")
+            -F "file=@${{ env.APK_FILE_PATH }}")
 
           # 打印上传接口返回结果
           echo "上传接口返回结果：$UPLOAD_RESPONSE"
@@ -104,11 +115,15 @@ jobs:
           echo "Job ID：${{ env.JOB_ID }}"
           echo "Project ID：${{ env.PROJECT_ID }}"
 
-          # 获取上传结果的 packageUrl
-          PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
-
-          # 打印调试信息
-          echo "Package URL：$PACKAGE_URL"
+          # 如果上传了 APK 文件，则获取上传结果的 packageUrl
+          if [ "${{ github.event.inputs.upload_app }}" == "true" ]; then
+            PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
+            echo "Package URL：$PACKAGE_URL"
+            APP_INFO=', "appinfo": { "packageUrl": "'"$PACKAGE_URL"'" }'
+          else
+            echo "未上传 APK 文件，跳过 appinfo 节点。"
+            APP_INFO=""
+          fi
 
           # 动态生成时间戳
           TIMESTAMP=$(date +%s%3N)
@@ -116,20 +131,16 @@ jobs:
           # 构造请求体
           REQUEST_DATA=$(cat <<EOF
           {
-            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
+            "apikey": "${{ env.API_KEY }}",
             "timestamp": ${TIMESTAMP},
-            "sid": "te2cca6b2b199fd38eb6419614b9dc56",
+            "sid": "${{ steps.login.outputs.result }}",
             "mkey": "realtest",
             "action": "app",
             "op": "ScheduledJob.execute",
             "data": {
               "jobId": ${{ env.JOB_ID }},
-              "projectid": ${{ env.PROJECT_ID }},
-              "appinfo": {
-                "packageUrl": "${PACKAGE_URL}"
-              },
-              "taskDescr": "",
-              "share": "1"
+              "projectid": ${{ env.PROJECT_ID }}
+              ${APP_INFO}
             }
           }
           EOF
