@@ -25,10 +25,7 @@ jobs:
       - name: 调用 Testin 登录接口
         id: login
         run: |
-          # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
-          
-          # 构造请求体（JSON格式）
           REQUEST_DATA=$(cat <<EOF
           {
             "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
@@ -43,40 +40,22 @@ jobs:
           }
           EOF
           )
-          
-          # 发送 POST 请求并捕获响应
           RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "Content-Type: application/json" \
             -d "$REQUEST_DATA")
-          
-          # 打印响应内容到日志
-          echo "登录接口返回结果："
-          echo "$RESPONSE"
-
-          # 使用 grep 和 awk 提取 data.result 的值
+          echo "登录接口返回结果：$RESPONSE"
           RESULT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | awk -F':' '{print $2}' | sed 's/"//g')
-
-          # 检查是否成功提取到 result 值
           if [ -z "$RESULT" ]; then
             echo "未提取到有效的 result 值！"
             exit 1
           fi
-
-          echo "提取到的 result 值：$RESULT"
-
-          # 将 result 值设置为输出变量
           echo "::set-output name=result::$RESULT"
 
       # 4. 使用提取到的 result 值上传 APK 文件
       - name: 上传 APK 文件
         run: |
-          # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
-
-          # 获取上一步的 sid（即 result 值）
           SID=${{ steps.login.outputs.result }}
-
-          # 构造 UPLOAD-JSON 头（包含动态 timestamp 和 sid）
           UPLOAD_JSON=$(cat <<EOF
           {
             "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
@@ -92,16 +71,24 @@ jobs:
           }
           EOF
           )
-
-          # 打印 UPLOAD-JSON 头
-          echo "构造的 UPLOAD-JSON 头："
-          echo "$UPLOAD_JSON"
-
-          # 上传 APK 文件并捕获响应
+          echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
           UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "UPLOAD-JSON: $UPLOAD_JSON" \
             -F "file=@apk/app-newest.apk")
+          echo "上传接口返回结果：$UPLOAD_RESPONSE"
 
-          # 打印上传接口返回结果
-          echo "上传接口返回结果："
-          echo "$UPLOAD_RESPONSE"
+          # 解析返回值（假设返回 JSON 格式）
+          STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.status')
+          MESSAGE=$(echo "$UPLOAD_RESPONSE" | jq -r '.message')
+          FILE_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '.file_id')
+
+          # 打印解析后的返回值
+          echo "上传状态：$STATUS"
+          echo "上传消息：$MESSAGE"
+          echo "文件 ID：$FILE_ID"
+
+          # 错误处理
+          if [ "$STATUS" != "success" ]; then
+            echo "上传失败！错误信息：$MESSAGE"
+            exit 1
+          fi
