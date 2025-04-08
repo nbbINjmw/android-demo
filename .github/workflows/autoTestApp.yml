@@ -54,8 +54,14 @@ jobs:
       # 4. 使用提取到的 result 值上传 APK 文件
       - name: 上传 APK 文件
         run: |
-          TIMESTAMP=$(date +%s%3N)
+          # 打印登录返回的 sid 值
           SID=${{ steps.login.outputs.result }}
+          echo "登录返回的 sid 值：$SID"
+
+          # 动态生成时间戳
+          TIMESTAMP=$(date +%s%3N)
+
+          # 构造 UPLOAD-JSON 头
           UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"4293d51043aee7e809c69b327848b35f","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
           echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
 
