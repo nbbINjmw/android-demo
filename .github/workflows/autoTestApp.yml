@@ -62,7 +62,7 @@ jobs:
           TIMESTAMP=$(date +%s%3N)
 
           # 构造 UPLOAD-JSON 头
-          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"4293d51043aee7e809c69b327848b35f","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
+          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"te2cca6b2b199fd38eb6419614b9dc56","sig":"4293d51043aee7e809c69b327848b35f","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
           echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
 
           # 使用 curl -v 打印详细请求日志
