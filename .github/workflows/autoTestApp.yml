@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  # 定义全局变量 JOB_ID 和 PROJECT_ID（固定值）
+  JOB_ID: 5       # 在这里指定 Job ID，默认值为 5
+  PROJECT_ID: 37  # 在这里指定 Project ID，默认值为 37
+
 jobs:
   upload-apk:
     runs-on: ubuntu-latest
@@ -53,6 +58,7 @@ jobs:
 
       # 4. 使用提取到的 result 值上传 APK 文件
       - name: 上传 APK 文件
+        id: upload
         run: |
           # 打印登录返回的 sid 值
           SID=${{ steps.login.outputs.result }}
@@ -62,30 +68,92 @@ jobs:
           TIMESTAMP=$(date +%s%3N)
 
           # 构造 UPLOAD-JSON 头
-          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"te2cca6b2b199fd38eb6419614b9dc56","sig":"4293d51043aee7e809c69b327848b35f","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
+          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"te2cca6b2b199fd38eb6419614b9dc56","sig":"f7ad7cb8ab1700de3fce03c983f201e9","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
           echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
 
           # 使用 curl -v 打印详细请求日志
-          UPLOAD_RESPONSE=$(curl -v -X POST "https://openapizyy.testin.cn" \
+          UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "UPLOAD-JSON: $UPLOAD_JSON" \
             -F "file=@apk/app-newest.apk")
 
           # 打印上传接口返回结果
-          echo "上传接口返回结果："
-          echo "$UPLOAD_RESPONSE"
+          echo "上传接口返回结果：$UPLOAD_RESPONSE"
 
           # 解析返回值（假设返回 JSON 格式）
-          STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.status')
-          MESSAGE=$(echo "$UPLOAD_RESPONSE" | jq -r '.message')
-          FILE_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '.file_id')
+          STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.msg')
+          PACKAGE_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.data.result')
 
           # 打印解析后的返回值
           echo "上传状态：$STATUS"
-          echo "上传消息：$MESSAGE"
-          echo "文件 ID：$FILE_ID"
+          echo "上传结果的 packageUrl：$PACKAGE_URL"
 
           # 错误处理
-          if [ "$STATUS" != "success" ]; then
-            echo "上传失败！错误信息：$MESSAGE"
+          if [ "$STATUS" != "成功" ]; then
+            echo "上传失败！错误信息：$UPLOAD_RESPONSE"
+            exit 1
+          fi
+
+          # 将 packageUrl 设置为输出变量
+          echo "::set-output name=packageUrl::$PACKAGE_URL"
+
+      # 5. 执行定时任务
+      - name: 执行定时任务
+        run: |
+          # 获取全局变量 JOB_ID 和 PROJECT_ID
+          echo "定时任务参数："
+          echo "Job ID：${{ env.JOB_ID }}"
+          echo "Project ID：${{ env.PROJECT_ID }}"
+
+          # 获取上传结果的 packageUrl
+          PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
+
+          # 打印调试信息
+          echo "Package URL：$PACKAGE_URL"
+
+          # 动态生成时间戳
+          TIMESTAMP=$(date +%s%3N)
+
+          # 构造请求体
+          REQUEST_DATA=$(cat <<EOF
+          {
+            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
+            "timestamp": ${TIMESTAMP},
+            "sid": "${{ steps.login.outputs.result }}",
+            "mkey": "realtest",
+            "action": "app",
+            "op": "ScheduledJob.execute",
+            "data": {
+              "jobId": ${{ env.JOB_ID }},
+              "projectid": ${{ env.PROJECT_ID }},
+              "appinfo": {
+                "packageUrl": "${PACKAGE_URL}"
+              },
+              "taskDescr": "",
+              "share": "1"
+            }
+          }
+          EOF
+          )
+
+          # 打印请求体
+          echo "构造的请求体：$REQUEST_DATA"
+
+          # 发送请求并捕获响应
+          RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
+            -H "Content-Type: application/json" \
+            -d "$REQUEST_DATA")
+
+          # 打印响应结果
+          echo "定时任务接口返回结果：$RESPONSE"
+
+          # 解析返回值
+          TASK_STATUS=$(echo "$RESPONSE" | jq -r '.msg')
+
+          # 打印解析后的返回值
+          echo "定时任务状态：$TASK_STATUS"
+
+          # 错误处理
+          if [ "$TASK_STATUS" != "成功" ]; then
+            echo "定时任务失败！错误信息：$RESPONSE"
             exit 1
           fi
