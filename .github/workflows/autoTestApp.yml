@@ -7,7 +7,7 @@ on:
 
 env:
   # 定义全局变量
-  API_KEY: "0cc70ef717d01b48ebfef5868a60cdd9"  # 在这里指定 API Key
+  API_KEY: "3f7c06d07dfbf6cbb04618cb67e1e0d7"  # 在这里指定 API Key
   APK_FILE_PATH: "apk/app-newest.apk"         # 在这里指定 APK 文件路径
   JOB_ID: 4710                                # 在这里指定 Job ID，默认值为 4710
   PROJECT_ID: 1944025                         # 在这里指定 Project ID，默认值为 1944025
