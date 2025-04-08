@@ -8,7 +8,7 @@ on:
       upload_app:
         description: "是否需要上传 APK 文件？(1 表示是，0 表示否)"
         required: true
-        default: "0"
+        default: "1"
 
 env:
   # 定义全局变量
