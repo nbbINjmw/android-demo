@@ -13,7 +13,7 @@ env:
   PROJECT_ID: 1944025                         # 在这里指定 Project ID，默认值为 1944025
   EMAIL: "nibingbing@testin.cn"               # 在这里指定登录邮箱
   PASSWORD: "9624564eebc9a3c388f29598779f6215" # 在这里指定登录密码（建议使用加密方式存储）
-  UPLOAD_APP: "0"                             # 是否需要上传 APK 文件？(1 表示是，0 表示否)
+  UPLOAD_APP: "1"                             # 是否需要上传 APK 文件？(1 表示是，0 表示否)
 
 jobs:
   autotest-app:
