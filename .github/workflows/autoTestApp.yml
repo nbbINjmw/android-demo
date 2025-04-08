@@ -1,4 +1,4 @@
-name: autoTestApp
+name: AutoTestApp
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       upload_app:
-        description: "是否需要上传 APP 文件？(true/false)"
+        description: "是否需要上传 APK 文件？(true/false)"
         required: true
         default: "true"
 
@@ -23,13 +23,17 @@ jobs:
   autotest-app:
     runs-on: ubuntu-latest
     steps:
+      # 调试：打印 upload_app 的值
+      - name: Debug upload_app value
+        run: echo "upload_app value: ${{ github.event.inputs.upload_app }}"
+
       # 1. 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
 
       # 2. 检查 APK 文件是否存在（仅当需要上传时）
       - name: Check APP existence
-        if: github.event.inputs.upload_app == 'true'
+        if: ${{ github.event.inputs.upload_app == 'true' }}
         run: |
           if [ ! -f "${{ env.APK_FILE_PATH }}" ]; then
             echo "APK 文件不存在！"
@@ -69,7 +73,7 @@ jobs:
       # 4. 使用提取到的 result 值上传 APK 文件（仅当需要上传时）
       - name: 上传 APP 文件
         id: upload
-        if: github.event.inputs.upload_app == 'true'
+        if: ${{ github.event.inputs.upload_app == 'true' }}
         run: |
           # 打印登录返回的 sid 值
           SID=${{ steps.login.outputs.result }}
