@@ -25,7 +25,10 @@ jobs:
       - name: 调用 Testin 登录接口
         id: login
         run: |
+          # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
+          
+          # 构造请求体（JSON格式）
           REQUEST_DATA=$(cat <<EOF
           {
             "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
@@ -40,24 +43,65 @@ jobs:
           }
           EOF
           )
+          
+          # 发送 POST 请求并捕获响应
           RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "Content-Type: application/json" \
             -d "$REQUEST_DATA")
-          echo "登录接口返回结果：$RESPONSE"
+          
+          # 打印响应内容到日志
+          echo "登录接口返回结果："
+          echo "$RESPONSE"
+
+          # 使用 grep 和 awk 提取 data.result 的值
           RESULT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | awk -F':' '{print $2}' | sed 's/"//g')
+
+          # 检查是否成功提取到 result 值
           if [ -z "$RESULT" ]; then
             echo "未提取到有效的 result 值！"
             exit 1
           fi
+
+          echo "提取到的 result 值：$RESULT"
+
+          # 将 result 值设置为输出变量
           echo "::set-output name=result::$RESULT"
 
       # 4. 使用提取到的 result 值上传 APK 文件
       - name: 上传 APK 文件
         run: |
+          # 动态生成时间戳（当前时间的毫秒数）
           TIMESTAMP=$(date +%s%3N)
+
+          # 获取上一步的 sid（即 result 值）
           SID=${{ steps.login.outputs.result }}
-          UPLOAD_JSON='{"apikey":"0cc70ef717d01b48ebfef5868a60cdd9","timestamp":'"${TIMESTAMP}"',"sid":"'"${SID}"'","sig":"60ffc558f7c9c0110512392672b8cec2","mkey":"fs","action":"fs","op":"File.upload","data":{"suffix":"apk"}}'
-          echo "构造的 UPLOAD-JSON 头：$UPLOAD_JSON"
-          curl -v -X POST "https://openapizyy.testin.cn" \
+
+          # 构造 UPLOAD-JSON 头（包含动态 timestamp 和 sid）
+          UPLOAD_JSON=$(cat <<EOF
+          {
+            "apikey": "0cc70ef717d01b48ebfef5868a60cdd9",
+            "timestamp": ${TIMESTAMP},
+            "sid": "${SID}",
+            "sig": "4293d51043aee7e809c69b327848b35f",
+            "mkey": "fs",
+            "action": "fs",
+            "op": "File.upload",
+            "data": {
+              "suffix": "apk"
+            }
+          }
+          EOF
+          )
+
+          # 打印 UPLOAD-JSON 头
+          echo "构造的 UPLOAD-JSON 头："
+          echo "$UPLOAD_JSON"
+
+          # 上传 APK 文件并捕获响应
+          UPLOAD_RESPONSE=$(curl -s -X POST "https://openapizyy.testin.cn" \
             -H "UPLOAD-JSON: $UPLOAD_JSON" \
-            -F "file=@apk/app-newest.apk"
+            -F "file=@apk/app-newest.apk")
+
+          # 打印上传接口返回结果
+          echo "上传接口返回结果："
+          echo "$UPLOAD_RESPONSE"
