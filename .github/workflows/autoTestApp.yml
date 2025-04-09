@@ -8,7 +8,7 @@ on:
 env:
   # 定义全局变量
   API_KEY: "3f7c06d07dfbf6cbb04618cb67e1e0d7"  # 在这里指定 API Key
-  APK_FILE_PATH: "apk/app-newest.apk"         # 在这里指定 APK 文件路径
+  APK_FILE_PATH: "apk/app-newest.apk"         # 在这里指定 APP 文件路径
   JOB_ID: 4710                                # 在这里指定 Job ID，默认值为 4710
   PROJECT_ID: 1944025                         # 在这里指定 Project ID，默认值为 1944025
   EMAIL: "nibingbing@testin.cn"               # 在这里指定登录邮箱
@@ -21,19 +21,19 @@ jobs:
     steps:
       # 调试：打印 upload_app 的值
       - name: Debug upload_app value
-        run: echo "upload_app value:${{ env.UPLOAD_APP }}"
+        run: echo "是否需要上传APP->upload_app value:${{ env.UPLOAD_APP }}"
 
       # 1. 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 检查 APK 文件是否存在（仅当需要上传时）
+      # 2. 检查 APP 文件是否存在（仅当需要上传时）
       - name: Check APP existence
         if: env.UPLOAD_APP == '1'
         run: |
-          echo "需要上传 APK 文件，检查文件是否存在..."
+          echo "需要上传 APP 文件，检查文件是否存在..."
           if [ ! -f "${{ env.APK_FILE_PATH }}" ]; then
-            echo "APK 文件不存在！"
+            echo "APP 文件不存在！"
             exit 1
           fi
 
@@ -67,12 +67,12 @@ jobs:
           fi
           echo "::set-output name=result::$RESULT"
 
-      # 4. 使用提取到的 result 值上传 APK 文件（仅当需要上传时）
+      # 4. 使用提取到的 result 值上传 APP 文件（仅当需要上传时）
       - name: 上传 APP 文件
         id: upload
         if: env.UPLOAD_APP == '1'
         run: |
-          echo "开始上传 APK 文件..."
+          echo "开始上传 APP 文件..."
 
           # 打印登录返回的 sid 值
           SID=${{ steps.login.outputs.result }}
@@ -118,13 +118,13 @@ jobs:
           echo "Job ID：${{ env.JOB_ID }}"
           echo "Project ID：${{ env.PROJECT_ID }}"
 
-          # 如果上传了 APK 文件，则获取上传结果的 packageUrl
+          # 如果上传了 APP 文件，则获取上传结果的 packageUrl
           if [ "${{ env.UPLOAD_APP }}" = "1" ]; then
             PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
             echo "Package URL：$PACKAGE_URL"
             APP_INFO=', "appinfo": { "packageUrl": "'"$PACKAGE_URL"'" }'
           else
-            echo "未上传 APK 文件，跳过 appinfo 节点。"
+            echo "未上传 APP 文件，跳过 appinfo 节点。"
             APP_INFO=""
           fi
 
