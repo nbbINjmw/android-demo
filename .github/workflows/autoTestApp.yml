@@ -54,10 +54,8 @@ jobs:
                 "pwd": "${{ env.PASSWORD }}"
               },
               "action": "user",
-              "timestamp": "${{ env.TIMESTAMP }}"
+              "timestamp": $(date +%s%3N)
             }
-        env:
-          TIMESTAMP: $(date +%s%3N)
       
       - name: Extract result
         run: |
