@@ -37,30 +37,21 @@ jobs:
             exit 1
           fi
 
-      - name: Call Testin login API
-        id: login
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: 'https://openapizyy.testin.cn'
-          method: 'POST'
-          headers: '{"Content-Type": "application/json"}'
-          data: |
-            {
-              "apikey": "${{ env.API_KEY }}",
-              "mkey": "usermanager",
-              "op": "Login.login",
-              "data": {
-                "email": "${{ env.EMAIL }}",
-                "pwd": "${{ env.PASSWORD }}"
-              },
-              "action": "user",
-              "timestamp": $(date +%s%3N)
-            }
-      
-      - name: Extract result
+      - name: Call Testin login API with wget
         run: |
-          RESULT=$(echo '${{ steps.login.outputs.response }}' | jq -r '.result')
-          echo "::set-output name=result::$RESULT"   
+          TIMESTAMP=$(date +%s%3N)
+          REQUEST_DATA='{"apikey":"'"${{ env.API_KEY }}"'","mkey":"usermanager","op":"Login.login","data":{"email":"'"${{ env.EMAIL }}"'","pwd":"'"${{ env.PASSWORD }}"'"},"action":"user","timestamp":'"$TIMESTAMP"}'
+          RESPONSE=$(wget --post-data="$REQUEST_DATA" \
+            --header="Content-Type: application/json" \
+            --output-document=- \
+            https://openapizyy.testin.cn 2>&1)
+          echo "登录接口返回结果：$RESPONSE"
+          RESULT=$(echo "$RESPONSE" | jq -r '.result')
+          if [ -z "$RESULT" ]; then
+            echo "未提取到有效的 result 值！"
+            exit 1
+          fi
+          echo "::set-output name=result::$RESULT" 
 
       # 4. 使用提取到的 result 值上传 APP 文件（仅当需要上传时）
       - name: 上传 APP 文件
