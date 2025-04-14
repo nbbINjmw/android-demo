@@ -39,7 +39,6 @@ jobs:
 
       - name: Call Testin login API
         id: login
-        if: env.should_upload == 'true'
         uses: fjogeleit/http-request-action@v1
         with:
           url: 'https://openapizyy.testin.cn'
