@@ -60,7 +60,9 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$REQUEST_DATA")
           echo "登录接口返回结果：$RESPONSE"
-          RESULT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | awk -F':' '{print $2}' | sed 's/"//g')
+          
+          # 使用 grep 和 sed 提取 result 值
+          RESULT=$(echo "$RESPONSE" | grep -o '"result":"[^"]*"' | sed 's/"result":"//;s/"$//')
           if [ -z "$RESULT" ]; then
             echo "未提取到有效的 result 值！"
             exit 1
@@ -93,9 +95,9 @@ jobs:
           # 打印上传接口返回结果
           echo "上传接口返回结果：$UPLOAD_RESPONSE"
 
-          # 解析返回值（假设返回 JSON 格式）
-          STATUS=$(echo "$UPLOAD_RESPONSE" | jq -r '.msg')
-          PACKAGE_URL=$(echo "$UPLOAD_RESPONSE" | jq -r '.data.result')
+          # 解析返回值（使用 grep 和 sed）
+          STATUS=$(echo "$UPLOAD_RESPONSE" | grep -o '"msg":"[^"]*"' | sed 's/"msg":"//;s/"$//')
+          PACKAGE_URL=$(echo "$UPLOAD_RESPONSE" | grep -o '"data":{"result":"[^"]*"' | sed 's/"data":{"result":"//;s/"$//')
 
           # 打印解析后的返回值
           echo "上传状态：$STATUS"
@@ -160,8 +162,8 @@ jobs:
           # 打印响应结果
           echo "定时任务接口返回结果：$RESPONSE"
 
-          # 解析返回值
-          TASK_STATUS=$(echo "$RESPONSE" | jq -r '.msg')
+          # 解析返回值（使用 grep 和 sed）
+          TASK_STATUS=$(echo "$RESPONSE" | grep -o '"msg":"[^"]*"' | sed 's/"msg":"//;s/"$//')
 
           # 打印解析后的返回值
           echo "定时任务状态：$TASK_STATUS"
