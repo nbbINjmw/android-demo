@@ -36,18 +36,7 @@ jobs:
             echo "APP 文件不存在！"
             exit 1
           fi
-      - name: Send POST request using netcat
-        run: |
-          TIMESTAMP=$(date +%s%3N)
-          REQUEST_DATA='{"apikey":"'"${{ env.API_KEY }}"'","mkey":"usermanager","op":"Login.login","data":{"email":"'"${{ env.EMAIL }}"'","pwd":"'"${{ env.PASSWORD }}"'"},"action":"user","timestamp":'"$TIMESTAMP"}'
-          RESPONSE=$(echo -e "POST / HTTP/1.1\r\nHost: openapizyy.testin.cn\r\nContent-Type: application/json\r\nContent-Length: ${#REQUEST_DATA}\r\n\r\n$REQUEST_DATA" | nc openapizyy.testin.cn 443)
-          echo "登录接口返回结果：$RESPONSE"
-          RESULT=$(echo "$RESPONSE" | jq -r '.result')
-          if [ -z "$RESULT" ]; then
-            echo "未提取到有效的 result 值！"
-            exit 1
-          fi
-          echo "::set-output name=result::$RESULT"
+
       # 3. 调用 Testin 登录接口并提取 result 值
       - name: 调用 Testin 登录接口
         id: login
