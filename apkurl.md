@@ -1,1 +1,1 @@
-https://testin-zyy.oss-cn-hangzhou.aliyuncs.com/APK--1-6fe62ba2389f4dcc8188dbfffd27e074.apk
+https://testin-zyy.oss-cn-hangzhou.aliyuncs.com/APK--1-115f33f654c4442ba9e13c547cfe2074.apk
