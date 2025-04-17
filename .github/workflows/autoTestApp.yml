@@ -2,8 +2,8 @@ name: AutoTestApp
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'artifacts/*.apk'  # 仅当 artifacts 目录下的 .apk 文件发生变化时触发
 
 env:
   # 定义全局变量
