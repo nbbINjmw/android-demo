@@ -1,4 +1,4 @@
-name: AutoTestApp
+name: AutoTest-ApkFilePushTrigger
 
 on:
   push:
