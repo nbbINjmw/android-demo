@@ -1,4 +1,4 @@
-name: AutoTest-ApkFilePushTrigger
+name: AutoTest-ManualBuildTrigger
 
 on:
   workflow_dispatch:
