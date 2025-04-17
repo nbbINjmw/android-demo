@@ -1,1 +1,1 @@
-对对对https://testin-zyy.oss-cn-hangzhou.aliyuncs.com/APK--1-6fe62ba2389f4dcc8188dbfffd27e074.apk
+cron: '30 1 * * *'  # 每天 UTC 时间 1:30 触发（对应北京时间 9:30）
