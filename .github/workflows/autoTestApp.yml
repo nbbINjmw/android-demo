@@ -8,16 +8,16 @@ on:
 env:
   # 定义全局变量
   API_KEY: "3f7c06d07dfbf6cbb04618cb67e1e0d7"  # 在这里指定 API Key
-  APP_FILE_PATH: "apk/app-newest.apk"         # 在这里指定 APP 文件路径
-  JOB_ID: 4710                                # 在这里指定 Job ID，默认值为 4710
-  PROJECT_ID: 1944025                         # 在这里指定 Project ID，默认值为 1944025
+  APP_FILE_PATH: "Testin.apk"                   # 在这里指定 APP 文件路径
+  JOB_ID: 4720                                # 在这里指定 Job ID(定时任务id)
+  PROJECT_ID: 1944025                         # 在这里指定 Project ID(项目id)
   EMAIL: "nibingbing@testin.cn"               # 在这里指定登录邮箱
   PASSWORD: "9624564eebc9a3c388f29598779f6215" # 在这里指定登录密码（建议使用加密方式存储）
   UPLOAD_APP: "1"                             # 是否需要上传 APK 文件？(1 表示是，0 表示否)
 
 jobs:
   autotest-app:
-    runs-on: ubuntu-latest
+    runs-on: [testin-poc]
     steps:
       # 调试：打印 upload_app 的值
       - name: Debug upload_app value
@@ -124,7 +124,8 @@ jobs:
           if [ "${{ env.UPLOAD_APP }}" = "1" ]; then
             PACKAGE_URL=${{ steps.upload.outputs.packageUrl }}
             echo "Package URL：$PACKAGE_URL"
-            APP_INFO=', "appinfo": { "packageUrl": "'"$PACKAGE_URL"'" }'
+            #APP_INFO=', "appinfo": { "packageUrl": "'"$PACKAGE_URL"'" }'
+            APP_INFO=', "appinfo": { "packageUrl": "https://testin-zyy.oss-cn-hangzhou.aliyuncs.com/APK--1-6fe62ba2389f4dcc8188dbfffd27e074.apk" }'
           else
             echo "未上传 APP 文件，跳过 appinfo 节点。"
             APP_INFO=""
