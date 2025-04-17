@@ -2,8 +2,7 @@ name: AutoTest-ScheduleBuildTrigger
 
 on:
   schedule:
-    - cron: '39 10 17 4 5'  # 2025 年 4 月 17 日上午 10 点 39 分
-
+    - cron:  '*/5 * * * *'
 env:
   # 定义全局变量
   API_KEY: "3f7c06d07dfbf6cbb04618cb67e1e0d7"  # 在这里指定 API Key
